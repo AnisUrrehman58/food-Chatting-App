@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:food_chating_app/Screen/ChatScreen/practice_chat.dart';
 
@@ -39,15 +38,8 @@ class _ChatBoxState extends State<ChatBox> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             /// Chat Box
-             CircleAvatar(radius: 33,backgroundImage:
-            CachedNetworkImage(
-              imageUrl: widget.user.image,
-              height: 50,
-              width: 50,
-              // progressIndicatorBuilder: (context, url, downloadProgress) =>
-              //     CircularProgressIndicator(value: downloadProgress.progress),
-              errorWidget: (context, url, error) => Icon(Icons.error),
-            ),),
+            const CircleAvatar(radius: 33,backgroundImage:
+            AssetImage('assets/user/user1.png')),
             SizedBox(width: width * 0.03),
 
             Expanded(
