@@ -1,96 +1,152 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:food_chating_app/constant/colors.dart';
+import 'package:food_chating_app/Screen/ChatScreen/chat_screen.dart';
 
-class ChatDetail extends StatelessWidget {
-  const ChatDetail({super.key});
+import '../../Service/Api/apis.dart';
+import '../../Service/Models/chat_user.dart';
+import '../../Service/Models/message.dart';
+import 'UserChat/message_card.dart';
+
+
+class ChatDetail extends StatefulWidget {
+final ChatUser user;
+  const ChatDetail({super.key, required this.user});
 
   @override
+  State<ChatDetail> createState() => _ChatDetailState();
+}
+
+class _ChatDetailState extends State<ChatDetail> {
+
+    List<Messages>   _list = [];
+final _textController = TextEditingController();
+  @override
   Widget build(BuildContext context) {
-    final height = MediaQuery.of(context).size.height;
-    final width = MediaQuery.of(context).size.width;
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(onPressed: () {}, icon: const Icon(Icons.arrow_back_ios, size: 25)),
-      ),
-      resizeToAvoidBottomInset: true, // This line allows the screen to resize when the keyboard is opened
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(onPressed: (){
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) =>  const ChatScreen()));
+          }, icon: const Icon(Icons.arrow_back_ios)),
+          centerTitle: true,
+          title: const Text('Chat', style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+          actions: [IconButton(onPressed: (){}, icon: const Icon(Icons.more_vert))],
+
+        ),
+        body: Column(
+          children: [
+            // Chat Header
+             Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
                 children: [
-                  const Text('Chat', style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
-                  SizedBox(height: height * 0.05),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1.3),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(15),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const CircleAvatar(radius: 35, backgroundImage: AssetImage('assets/user/user1.png')),
-                              SizedBox(width: width * 0.04),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 10),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text('Naxient', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                                      const SizedBox(height: 5),
-                                      Text('Online', style: TextStyle(color: Colors.black.withOpacity(0.5))),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 10),
-                                child: CircleAvatar(
-                                  radius: 23,
-                                  backgroundColor: AColors.pink.withOpacity(0.2),
-                                  child: IconButton(
-                                    onPressed: () {},
-                                    icon: Icon(Icons.phone, size: 28, color: AColors.pink),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Divider(color: Colors.grey.withOpacity(0.6), thickness: 1.2),
-                        // You can add chat bubbles here...
-                        SizedBox(height: height * 0.45), // Adjust this height to control the space for chat messages
-                      ],
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: CachedNetworkImage(
+                        height: 60,
+                        width: 60,
+                        imageUrl: widget.user.image,
+                        placeholder: (context, url) => const Text(''),
+                        errorWidget: (context, url, error) => const CircleAvatar(child: Icon(Icons.person,))
                     ),
                   ),
+                  const SizedBox(width: 10),
+                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      Text(widget.user.name,style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 18.0)),
+                      const Text('Online',style: TextStyle(color: Colors.green)),
+                    ],
+                  ),
+                  const Spacer(),
+                  CircleAvatar(radius: 25,backgroundColor: Colors.pink.withOpacity(0.2),child:
+                  const Icon(Icons.call,color: Colors.pinkAccent))
                 ],
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: TextFormField(
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.grey[200],
+            const Divider(),
+            Expanded(
+              child: StreamBuilder(
+                stream: Apis.getAllAllMessages(widget.user),
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState){
+                  /// if data is loading
+                    case  ConnectionState.waiting:
+                    case  ConnectionState.none:
+                      return const Center(child: Text(''));
+
+                  /// if some all data is loaded then show it
+                    case ConnectionState.active:
+                    case ConnectionState.done:
+
+                      final data = snapshot.data?.docs;
+                      _list = data?.map((e) => Messages.fromJson(e.data())).toList()?? [];
+
+
+                      if(_list.isNotEmpty){
+                        return ListView.builder(
+                            physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.only(top: 20),
+                          itemCount: _list.length,
+                            itemBuilder: (context, index) {
+                              return  MessageCard(messages: _list[index]);
+                            });
+                      }else {
+                        return const
+                        Center(child: Text('Sey Hii! 👋',style: TextStyle(fontSize: 19)));
+                      }
+
+                  }
+
+                },
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
+
+            /// Send Message Input
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                child: Row(
+                  children: [
+                    IconButton(onPressed: (){}, icon:  Icon(Icons.emoji_emotions,color: Colors.pinkAccent.withOpacity(0.8))),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _textController,
+                        // keyboardType: TextInputType.multiline,
+                        maxLines: null,
+                         decoration: const InputDecoration(
+                          hintText: 'Type message...',
+                          hintStyle: TextStyle(color: Colors.pinkAccent),
+                          border: InputBorder.none,
+                          // fillColor: Colors.grey[200],
+                          // filled: true,
+                        ),
+                      ),
+                    ),
+                    IconButton(onPressed: (){}, icon:  Icon(Icons.photo,color: Colors.pinkAccent.withOpacity(0.8).withOpacity(0.8))),
+                    IconButton(onPressed: (){}, icon:  Icon(Icons.camera_alt,color: Colors.pinkAccent.withOpacity(0.8))),
+
+                    const SizedBox(width: 8.0),
+                     CircleAvatar(radius: 23.0,backgroundColor: Colors.pinkAccent,
+                          child: IconButton(onPressed: (){
+                            if(_textController.text.isNotEmpty){
+                              Apis.sendMessage(widget.user, _textController.text);
+                              _textController.clear();
+                            }
+                          }, icon: const Icon(Icons.send, color: Colors.white)) ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+

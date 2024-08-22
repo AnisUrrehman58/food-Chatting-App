@@ -1,7 +1,8 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:food_chating_app/Screen/ChatScreen/practice_chat.dart';
+import 'package:food_chating_app/Screen/ChatScreen/chat_detail.dart';
 
-import '../Service/Models/model.dart';
+import '../Service/Models/chat_user.dart';
 
 class ChatBox extends StatefulWidget {
   final ChatUser user;
@@ -22,11 +23,11 @@ class _ChatBoxState extends State<ChatBox> {
     final width = MediaQuery.of(context).size.width;
     return GestureDetector(
       onTap: (){
-        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PracticeChat()));
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) =>  ChatDetail(user: widget.user)));
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.only(left: 15),
+        padding: const EdgeInsets.only(left: 05),
         height: height *0.1,
         width: width * 0.99,
         decoration: BoxDecoration(
@@ -38,26 +39,35 @@ class _ChatBoxState extends State<ChatBox> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             /// Chat Box
-            const CircleAvatar(radius: 33,backgroundImage:
-            AssetImage('assets/user/user1.png')),
-            SizedBox(width: width * 0.03),
-
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 13),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                     Text(widget.user.about,style: const TextStyle(fontSize: 16,fontWeight: FontWeight.w500)),
-                    const SizedBox(height: 5),
-                    Text(widget.user.name,style: TextStyle(color: Colors.black.withOpacity(0.5))),
-                  ],
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(30),
+              child: CachedNetworkImage(
+                height: 60,
+                width: 60,
+                imageUrl: widget.user.image,
+                placeholder: (context, url) => const Text(''),
+                errorWidget: (context, url, error) => const CircleAvatar(child: Icon(Icons.person,))
               ),
             ),
+            // const CircleAvatar(radius: 33,backgroundImage:
+            // AssetImage('assets/user/user1.png')),
             Padding(
-              padding:  const EdgeInsets.only(right: 10,bottom: 35),
-              child: Text(widget.user.id,style: TextStyle(color: Colors.black.withOpacity(0.7))),
+              padding: const EdgeInsets.only(top: 13,left: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text(widget.user.name,style: const TextStyle(fontSize: 15,fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 5),
+                  Text(widget.user.about,style: TextStyle(fontSize: 15,color: Colors.black.withOpacity(0.5))),
+                ],
+              ),
+            ),
+            Expanded(
+
+              child: Padding(
+                padding:  const EdgeInsets.only(right: 10,bottom: 35),
+                child: Text(widget.user.id,style: TextStyle(color: Colors.black.withOpacity(0.7)),textAlign: TextAlign.end),
+              ),
             )
           ],
         ),
